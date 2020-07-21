@@ -1,0 +1,9 @@
+.vscode/.ropeproject
+__pycache__
+.pytest_cache
+cache*
+*.log
+/*.egg-info
+*.pyc
+.vscode
+unilyze/db
