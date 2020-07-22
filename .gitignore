@@ -7,3 +7,4 @@ cache*
 *.pyc
 .vscode
 unilyze/db
+.env

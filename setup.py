@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="unilyze",
-    version="0.1.0",
+    version="0.2.0",
     author="Alex Skov Jensen",
     author_email="pydev@offline.dk",
     description="Get detailed unicode information about characters and text",
@@ -15,7 +15,17 @@ setuptools.setup(
     packages=["unilyze"],
     include_package_data=True,
     license="MIT",
-    keywords=["unicode", "codepoint", "text", "character", "information", "ucd", "language"],
+    keywords=[
+        "unicode",
+        "codepoint",
+        "text",
+        "character",
+        "information",
+        "ucd",
+        "language",
+        "exemplar",
+        "cldr",
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Development Status :: 4 - Beta",

@@ -4,9 +4,13 @@ from os import path
 from pkg_resources import resource_string
 
 # Location of files used for unicode lookups
-CHAR_DB_FILE = "db/unicode_db.json"
-PROPERTY_FILE = "db/property_names.json"
-PROPERTY_VALUES_FILE = "db/property_values.json"
+UCD_CODEPOINT_FILE = "db/ucd_codepoints.json"
+UCD_PROPERTY_NAME_FILE = "db/ucd_property_names.json"
+UCD_PROPERTY_VALUES_FILE = "db/ucd_property_values.json"
+
+CLDR_LANGUAGE_TERRITORY_FILE = "db/cldr_language_territory.json"
+CLDR_CHAR_EXEMPLAR_FILE = "db/cldr_char_exemplar.json"
+CLDR_EXEMPLAR_CHAR_FILE = "db/cldr_exemplar_char.json"
 
 
 class Unichar:
@@ -18,9 +22,13 @@ class Unichar:
     def __init__(self):
         """Loads the json database files into memory
         """
-        self.__char_db = self.__load_json(CHAR_DB_FILE)
-        self.__properties = self.__load_json(PROPERTY_FILE)
-        self.__property_values = self.__load_json(PROPERTY_VALUES_FILE)
+        self.__ucd_codepoints = self.__load_json(UCD_CODEPOINT_FILE)
+        self.__ucd_properties = self.__load_json(UCD_PROPERTY_NAME_FILE)
+        self.__ucd_property_values = self.__load_json(UCD_PROPERTY_VALUES_FILE)
+
+        self.__cldr_lng_terr = self.__load_json(CLDR_LANGUAGE_TERRITORY_FILE)
+        self.__cldr_char_exemplar = self.__load_json(CLDR_CHAR_EXEMPLAR_FILE)
+
         self.__uc_single_ref = ["bmg", "bpb", "suc", "slc", "stc", "scf", "EqUIdeo"]  # codepoint references
         self.__uc_multi_ref = ["FC_NFKC", "uc", "lc", "tc", "cf", "dm", "NFKC_CF"]  # codepoint references
 
@@ -88,7 +96,7 @@ class Unichar:
             return codepoint_ref
 
         # Get lookup table for an UCD property. Eg lookuptable for Eg "age" would be {"1.1": "V1_1",.....}
-        p_lookup = self.__property_values.get(property)
+        p_lookup = self.__ucd_property_values.get(property)
         if p_lookup:
             pv_lookup = p_lookup.get(property_value)  # Look up UCD value in our lookuptable.
             if pv_lookup:
@@ -114,19 +122,22 @@ class Unichar:
         """
         scx = []
         scripts = property_value.split(" ")
-        p_lookup = self.__property_values.get("sc")  # scx uses same lookup table as sc
+        p_lookup = self.__ucd_property_values.get("sc")  # scx uses same lookup table as sc
         for script in scripts:
             pv_lookup = p_lookup.get(script)
             scx.append(pv_lookup)
         return scx
 
-    def raw_info(self, char):
+    def ucd_info_raw(self, char):
         """Gets info of a single unicode character. This is the lowlevel method that returns
         compact information very close to that found in the original XML from unicode.org
         For more readable resule use "full_charinfo"-method
 
         Args:
             char (str): A single character the should be looked up. Eg: "ä"
+
+        Raises:
+            ValueError: If something other than one single unicode character is provided
 
         Returns:
             dict: All the properties of the character
@@ -136,11 +147,11 @@ class Unichar:
         if len(char) != 1:
             raise ValueError("Only one unicode character is considered valid. No more, no less.")
 
-        char_info = self.__char_db["chars"].get(char)
+        char_info = self.__ucd_codepoints["chars"].get(char)
 
         if char_info:
             group = char_info.get("group")
-            group_info = self.__char_db["groups"][group]
+            group_info = self.__ucd_codepoints["groups"][group]
 
             merged_info = {**group_info, **char_info}  # Tags from char takes precedence over the group tags.
             merged_info.pop("group")  # Users dont need to see the group, Its for us to internally join data
@@ -148,7 +159,7 @@ class Unichar:
         else:
             return None
 
-    def info(self, char):
+    def ucd_info(self, char):
         """Get raw info of a character and creates a new dict in human readable format.
         Both keys and values (UCD properties and UCD property values) are looked up and translated.
 
@@ -159,13 +170,74 @@ class Unichar:
             dict: A full dict with over 100 keys describing the character. All in readable format.
         """
         full_info = {}
-        info = self.raw_info(char)  # Get raw info of char
-        if info:
-            for k, v in info.items():
+        ucd_info = self.ucd_info_raw(char)  # Get raw info of char
+        if ucd_info:
+            for k, v in ucd_info.items():
                 looked_up_v = self.__property_value_lookup(k, v)  # convert the UCD property value to readable
-                looked_up_name = self.__properties.get(k)  # Lookup the UCD property name
+                looked_up_name = self.__ucd_properties.get(k)  # Lookup the UCD property name
                 if looked_up_name:
                     full_info[looked_up_name] = looked_up_v
                 else:
                     full_info[k] = looked_up_v
         return full_info
+
+    def lng_name_lookup(self, country):
+        """Converts a short language/territory name to a long english name.
+
+        Args:
+            country (str): Short language name. Eg: "da", "en" or with territory: "en_GB", "da_DK"
+
+        Returns:
+            str: An english name like "danish : Denmark"
+        """
+        split_country = country.split("_")  # language and territory is split by "_"
+        if len(split_country) == 1:  # Only language is provided
+            language = split_country[0]
+            conv_country = self.__cldr_lng_terr["language"].get(language, "")
+        else:  # Both language and territory
+            language, territory = split_country[0], split_country[1]
+            conv_country = (
+                self.__cldr_lng_terr["language"].get(language, "")
+                + " : "
+                + self.__cldr_lng_terr["territory"].get(territory, "")
+            )
+        return conv_country
+
+    def lng_usage_raw(self, char):
+        """Gets information about what languages the character is used in. The result is a in each language-
+        group is a dict of short language_territory names. Like ["da_DK", "en"]
+
+        Args:
+            char (str): A single unicode character
+
+        Raises:
+            ValueError: If something other than one single unicode character is provided
+
+        Returns:
+            dict: Eg a lookup of "\u0f10" would return: {'punctuation': ['dz']}...
+        """
+        if len(char) != 1:
+            raise ValueError("Only one unicode character is considered valid. No more, no less.")
+
+        return self.__cldr_char_exemplar.get(char)
+
+    def lng_usage(self, char):
+        """Gets information about what languages the character is used in.. Based on "lng_usage_raw", but
+        with converted language/territory names.
+
+        Args:
+            char (str): A single unicode character
+
+        Returns:
+            dict: [description]: Eg a lookup of "\u0f10" would return: {'punctuation': ['Dzongkha']}
+        """
+        info = self.lng_usage_raw(char)
+        if info:
+            full_info = {}  # A new dict for the converted language-names.
+            for group, countries in info.items():
+                full_info.setdefault(group, [])
+                for country in countries:
+                    conv_country = self.lng_name_lookup(country)
+                    full_info[group].append(conv_country)
+            return full_info
+        return None
