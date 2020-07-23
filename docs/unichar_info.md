@@ -122,7 +122,7 @@ pprint(info)
  ```
 # Unicode character RAW information:
 ```
-raw_info = uc.ucd_info_raw("J")
+raw_info = uc.ucd_info_short("J")
 pprint(raw_info, compact=True)
 ```
 **Output:**

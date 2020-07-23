@@ -128,7 +128,7 @@ class Unichar:
             scx.append(pv_lookup)
         return scx
 
-    def ucd_info_raw(self, char):
+    def ucd_info_short(self, char):
         """Gets info of a single unicode character. This is the lowlevel method that returns
         compact information very close to that found in the original XML from unicode.org
         For more readable resule use "full_charinfo"-method
@@ -170,7 +170,7 @@ class Unichar:
             dict: A full dict with over 100 keys describing the character. All in readable format.
         """
         full_info = {}
-        ucd_info = self.ucd_info_raw(char)  # Get raw info of char
+        ucd_info = self.ucd_info_short(char)  # Get raw info of char
         if ucd_info:
             for k, v in ucd_info.items():
                 looked_up_v = self.__property_value_lookup(k, v)  # convert the UCD property value to readable
@@ -203,7 +203,7 @@ class Unichar:
             )
         return conv_country
 
-    def lng_usage_raw(self, char):
+    def lng_usage_short(self, char):
         """Gets information about what languages the character is used in. The result is a in each language-
         group is a dict of short language_territory names. Like ["da_DK", "en"]
 
@@ -231,7 +231,7 @@ class Unichar:
         Returns:
             dict: [description]: Eg a lookup of "\u0f10" would return: {'punctuation': ['Dzongkha']}
         """
-        info = self.lng_usage_raw(char)
+        info = self.lng_usage_short(char)
         if info:
             full_info = {}  # A new dict for the converted language-names.
             for group, countries in info.items():
@@ -241,3 +241,27 @@ class Unichar:
                     full_info[group].append(conv_country)
             return full_info
         return None
+
+    def in_lng(self, char, lng_short):
+        """Checks if a character is part of a language.
+
+        Args:
+            char (str): A single unicode character
+            lng_short (str): Two letter language code: Eg: en, da, fr
+
+        Raises:
+            KeyError: If an illegal language is provided
+
+        Returns:
+            bool: True if char is used in the language, otherwise false
+        """
+        languages = self.__cldr_lng_terr["language"]
+        if lng_short not in languages.keys():
+            raise KeyError("Language does not exist")
+
+        usage = self.lng_usage_short(char)
+        if usage:
+            for languages in usage.values():
+                if lng_short in languages:
+                    return True
+        return False

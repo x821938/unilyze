@@ -12,17 +12,18 @@ First we import the `Unilyze` lib:
 Now we can create an Unichar instance and use it:
 ```
 >> uc = Unichar()
->> info = uc.info("a")
+>> info = uc.ucd_info("a")
 >> pprint(info)
 
 {'ASCII_Hex_Digit': False,
  'Age': 'V1_1',
  'Alphabetic': True ...}
 ```
-This will make a huge dict of attributes of the character. **See [FULL OUTPUT](docs/unichar_info.md)**
+This will make a huge dict of attributes of the character. **See [FULL OUTPUT](https://github.com/x821938/unilyze/blob/master/docs/unichar_info.md)**
+There are literally more than 100 attributes for each character!  
 You can also get the raw-data like this:
 ```
-raw_info = uc.raw_info("J")
+raw_info = uc.ucd_info_short("J")
 ```
 You can also find out in what languages a unicode character is used:
 ```
@@ -35,7 +36,7 @@ You can also find out in what languages a unicode character is used:
           'Kalaallisut',...
 }
 ```
-Here you will get a huge dict with countries. **See [FULL OUTPUT](docs/unichar_usage.md)**
+Here you will get a huge dict with countries. **See [FULL OUTPUT](https://github.com/x821938/unilyze/blob/master/docs/unichar_usage.md)**
 ## Unistat Class
 
 This class is used to get statistics of strings instead of single characters. It's used for summing op
@@ -58,7 +59,7 @@ information of each single character in the string.
                   'total-count': 25}},.........
 ```
 Again we get a huge output grouped on UCD properties, and a count of the characters. 
-**See [FULL OUTPUT](docs/unistat_info.md)**
+**See [FULL OUTPUT](https://github.com/x821938/unilyze/blob/master/docs/unistat_info.md)**
 
 A simple count of each character can be done like this:
 ```
@@ -69,6 +70,8 @@ A simple count of each character can be done like this:
 ```
 
 ## Final notes
+For full usage, look in the **[examples](https://github.com/x821938/unilyze/tree/master/examples)** folder.  
+
 All the data is bases on Unicode version 13 definition files from www.unicode.org 
 You should only create one instance of Unichar or Unistat, because it loads 60Mb of data into memory. 
 It not only uses a lot of memory, it also takes some time (a second or so)

@@ -3,9 +3,11 @@ from pprint import pprint
 
 uc = Unichar()
 
-raw_info = uc.ucd_info_raw("J")
-pprint(raw_info, compact=True)
-print()
-
+# Get unicode information af a character with english attributes
 info = uc.ucd_info("J")
 pprint(info)
+
+# Get RAW and not so readable unicode information of a character
+raw_info = uc.ucd_info_short("J")
+pprint(raw_info, compact=True)
+print()

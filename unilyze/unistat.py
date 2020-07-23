@@ -34,21 +34,21 @@ class Unistat(Unichar):
                                     },
             }
         """
-        self.__uni_stat = {}
+        stat = {}
         for char, count in self.__char_stat.items():
             info = self.ucd_info(char)  # Get full unicode information of char
             for property, property_val in info.items():
                 if property_val and not isinstance(property_val, list):
-                    self.__uni_stat.setdefault(property, {})
-                    self.__uni_stat[property].setdefault(property_val, {})
+                    stat.setdefault(property, {})
+                    stat[property].setdefault(property_val, {})
 
-                    self.__uni_stat[property][property_val].setdefault("total-count", 0)
-                    self.__uni_stat[property][property_val]["total-count"] += count
+                    stat[property][property_val].setdefault("total-count", 0)
+                    stat[property][property_val]["total-count"] += count
 
-                    self.__uni_stat[property][property_val].setdefault("chars", set())
-                    self.__uni_stat[property][property_val]["chars"].add(char)
+                    stat[property][property_val].setdefault("chars", set())
+                    stat[property][property_val]["chars"].add(char)
 
-        return self.__uni_stat
+        return stat
 
     def charstat(self):
         """Get occurrences of each character in the text

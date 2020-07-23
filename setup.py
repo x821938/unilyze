@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="unilyze",
-    version="0.2.0",
+    version="0.2.1",
     author="Alex Skov Jensen",
     author_email="pydev@offline.dk",
     description="Get detailed unicode information about characters and text",
